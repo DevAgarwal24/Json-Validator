@@ -6,10 +6,12 @@
 #include "JsonParser.h"
 
 void printHelp() {
-    std::cout   << "Usage: json [OPTIONS] FILE_PATH\n"
+    std::cout   << "Usage: json [options] string/file\n"
                 << "Utility to validate JSON Files\n"
                 << "Options:\n"
-                << "  -h, --help          Display this help and exit\n";
+                << "  -h, --help          Display this help and exit\n"
+                << "  -f, --file          Path to the json file\n"
+                << "  -s, --string        Json string (default)\n";
 }
 
 bool isJsonFile(const std::string& filePath) {
@@ -33,27 +35,17 @@ bool isJsonFile(const std::string& filePath) {
     return false;
 }
 
-int main(int argc, char **argv) {
-    if (argc < 2) {
-        std::cerr << "Missing arguments. Use -h or --help for help.\n";
-        return 1;
-    }
-
-    std::string options = argv[1];
-    if (options.compare("-h") == 0 || options.compare("--help") == 0) {
-        printHelp();
-        return 0;
-    }
-
-    std::string filePath = options;
+std::string readFromFile(const std::string &filePath) {
     if (!std::filesystem::exists(filePath)) {
         std::cerr << "File doesn't exist. Use -h or --help for help.\n";
-        return 1;
+        return std::string();
+        // return 1;
     }
 
     if (!isJsonFile(filePath)) {
         std::cerr << "Incorrect file type. Use -h or --help for help.\n";
-        return 1;
+        return std::string();
+        // return 1;
     }
 
     // Open the file
@@ -62,7 +54,8 @@ int main(int argc, char **argv) {
     // Check if the file is open
     if (!inputFile.is_open()) {
         std::cerr << "Error opening file: " << filePath << std::endl;
-        return 1;
+        return std::string();
+        // return 1;
     }
 
     // Read the file content into a string
@@ -70,6 +63,44 @@ int main(int argc, char **argv) {
                             std::istreambuf_iterator<char>());
 
     inputFile.close();
+
+    return fileContent;
+}
+
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        std::cerr << "Missing arguments. Use -h or --help for help.\n";
+        return 1;
+    }
+
+    std::string options = argv[1];
+    std::string fileContent;
+    if (options.compare("-h") == 0 || options.compare("--help") == 0) {
+        printHelp();
+        return 0;
+    }
+
+    if (options.compare("-f") == 0 || options.compare("--file") == 0) {
+        if (argc < 3) {
+            std::cerr << "Missing arguments. Use -h or --help for help.\n";
+            return 1;
+        }
+        std::string filePath = argv[2];
+        fileContent = readFromFile(filePath);
+        if (fileContent.length() == 0) return 1;
+    }
+
+    if (options.compare("-s") == 0 || options.compare("--string") == 0) {
+        if (argc < 3) {
+            std::cerr << "Missing arguments. Use -h or --help for help.\n";
+            return 1;
+        }
+        fileContent = argv[2];
+    }
+
+    if (argc == 2) {
+        fileContent = argv[1];
+    }
 
     // std::cout << "File content:\n" << fileContent << " " << fileContent.length() << std::endl;
 
