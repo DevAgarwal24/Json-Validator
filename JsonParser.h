@@ -20,7 +20,7 @@ public:
         }
 
         return isValidJson_;
-    }
+    } // parse()
 
 private:
 
@@ -33,11 +33,15 @@ private:
             parseObject();
         } else if (currentChar == '\"') {
             parseString();
+        } else if (currentChar == 't' || currentChar == 'f') {
+            parseBoolean();
+        } else if (currentChar == 'n'){
+            parseNull();
         } else {
             isValidJson_ = false;
             std::cerr << "Error: Unexpected character '" << currentChar << "'" << std::endl;
         }
-    }
+    } // parseValue()
 
     void parseObject() {
         // Expecting "{"
@@ -64,7 +68,7 @@ private:
             isValidJson_ = false;
             std::cerr << "Error: Expected '{' but found '" << extractUnexpected(1) << "'" << std::endl;
         }
-    }
+    } // parseObject()
 
     void parseObjectMembers() {
         while (getCurrentChar() != '}' && position_ < input_.size()) {
@@ -107,7 +111,7 @@ private:
                 std::cerr << "Error: Expected ':' but found '" << extractUnexpected(1) << "'" << std::endl;
             }
         }
-    }
+    } // parseObjectMembers()
 
     bool parseString() {
         if (getCurrentChar() == '\"') {
@@ -177,7 +181,42 @@ private:
         }
 
         return true;
-    }
+    } // parseString()
+
+    void parseBoolean() {
+        if (input_.compare(position_, 4, "true") == 0) {
+            // Ensure that the next character after "true" is not a valid identifier character
+            if (position_ + 4 <= (input_.size() - 1) && !isIdentifierChar(input_[position_ + 4])) {
+                std::cout << "Parsed boolean: true" << std::endl;
+                position_ += 4;
+            } else {
+                std::cerr << "Error: Unexpected characters after 'true'" << std::endl;
+            }
+        } else if (input_.compare(position_, 5, "false") == 0) {
+            if (position_ + 5 <= (input_.size() - 1) && !isIdentifierChar(input_[position_ + 5])) {
+                std::cout << "Parsed boolean: false" << std::endl;
+                position_ += 5;
+            } else {
+                std::cerr << "Error: Unexpected characters after 'true'" << std::endl;
+            }
+        } else {
+            std::cerr << "Error: Expected 'true' or 'false' but found '" << extractUnexpected(6) << "'" << std::endl;
+        }
+    } // parseBoolean()
+
+    void parseNull() {
+        if (input_.compare(position_, 4, "null") == 0) {
+            // Ensure that the next character after "null" is not a valid identifier character
+            if (position_ + 4 <= (input_.size() - 1) && !isIdentifierChar(input_[position_ + 4])) {
+                std::cout << "Parsed null" << std::endl;
+                position_ += 4;
+            } else {
+                std::cerr << "Error: Unexpected characters after 'null'" << std::endl;
+            }
+        } else {
+            std::cerr << "Error: Expected 'true' or 'false' but found '" << extractUnexpected(5) << "'" << std::endl;
+        }
+    } // parseNull()
 
     // Helper functions
     char getCurrentChar() {
@@ -196,6 +235,11 @@ private:
         while (position_ < input_.size() && std::isspace(getCurrentChar())) {
             position_++;
         }
+    }
+
+    bool isIdentifierChar(char c) {
+        // Check if the character is a valid identifier character
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
     }
 
     const std::string& input_;
