@@ -37,6 +37,8 @@ private:
             parseBoolean();
         } else if (currentChar == 'n'){
             parseNull();
+        } else if (isNumChar(currentChar)) {
+            parseNumber();
         } else {
             isValidJson_ = false;
             std::cerr << "Error: Unexpected character '" << currentChar << "'" << std::endl;
@@ -190,6 +192,7 @@ private:
                 std::cout << "Parsed boolean: true" << std::endl;
                 position_ += 4;
             } else {
+                isValidJson_ = false;
                 std::cerr << "Error: Unexpected characters after 'true'" << std::endl;
             }
         } else if (input_.compare(position_, 5, "false") == 0) {
@@ -197,9 +200,11 @@ private:
                 std::cout << "Parsed boolean: false" << std::endl;
                 position_ += 5;
             } else {
-                std::cerr << "Error: Unexpected characters after 'true'" << std::endl;
+                isValidJson_ = false;
+                std::cerr << "Error: Unexpected characters after 'false'" << std::endl;
             }
         } else {
+            isValidJson_ = false;
             std::cerr << "Error: Expected 'true' or 'false' but found '" << extractUnexpected(6) << "'" << std::endl;
         }
     } // parseBoolean()
@@ -211,12 +216,30 @@ private:
                 std::cout << "Parsed null" << std::endl;
                 position_ += 4;
             } else {
-                std::cerr << "Error: Unexpected characters after 'null'" << std::endl;
+                isValidJson_ = false;
+                std::cerr << "Error: Unexpected characters after 'null'" << extractUnexpected(1) << std::endl;
             }
         } else {
-            std::cerr << "Error: Expected 'true' or 'false' but found '" << extractUnexpected(5) << "'" << std::endl;
+            isValidJson_ = false;
+            std::cerr << "Error: Expected 'null' but found '" << extractUnexpected(5) << "'" << std::endl;
         }
     } // parseNull()
+
+    void parseNumber() {
+        std::string parsedNumber;
+
+        while ((position_ + 1 < input_.size()) &&  (isNumChar(getCurrentChar()) || getCurrentChar() == '.')) {
+            parsedNumber += getCurrentChar();
+            position_++;
+        }
+
+        if (position_ + 1 < input_.size() && !isIdentifierChar(input_[position_ + 1])) {
+            std::cout << "Parsed Number: " << parsedNumber << std::endl;
+        } else {
+            isValidJson_ = false;
+            std::cerr << "Error: Expected a number but found '" << extractUnexpected(1) << "'" << std::endl;
+        }
+    } // parseNumber
 
     // Helper functions
     char getCurrentChar() {
@@ -240,6 +263,10 @@ private:
     bool isIdentifierChar(char c) {
         // Check if the character is a valid identifier character
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
+    }
+
+    bool isNumChar(char c) {
+        return (c >= '0' && c <= '9');
     }
 
     const std::string& input_;
