@@ -19,7 +19,7 @@ No installation is required. Simply compile the provided C++ code and obtain the
 ## Usage
 
 ```bash
-json [OPTIONS] string/file
+./json [OPTIONS] string/file
 ```
 
 - **string/file**: The JSON data to be validated. It can be provided as a string or read from a file.
@@ -37,19 +37,20 @@ json [OPTIONS] string/file
 1. Validate JSON data provided as a string:
 
 ```bash
-json -s '{"key": "value", "array": [1, 2, 3]}'
+./json '{"key": "value", "array": [1, 2, 3]}'
+./json -s '{"key": "value", "array": [1, 2, 3]}'
 ```
 
 2. Validate JSON data from a file:
 
 ```bash
-json -f path/to/json/file.json
+./json -f path/to/json/file.json
 ```
 
 3. Display help information:
 
 ```bash
-json --help
+./json --help
 ```
 
 ## Testing
@@ -57,7 +58,7 @@ json --help
 To run the test suite for the JSON parser, use the following command:
 
 ```bash
-json -t
+./json -t
 ```
 
 This will execute the predefined test cases and report the results.
