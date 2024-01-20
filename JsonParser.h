@@ -28,9 +28,11 @@ private:
         char currentChar = getCurrentChar();
 
         if (currentChar == '\0') {
-            
+            // Do nothing and let it fall through
         } else if (currentChar == '{') {
             parseObject();
+        } else if (currentChar == '[') {
+            parseArray();
         } else if (currentChar == '\"') {
             parseString();
         } else if (currentChar == 't' || currentChar == 'f') {
@@ -51,6 +53,13 @@ private:
             // Move the position forward to skip it
             position_++;
 
+            trimWhitespace();
+            if (getCurrentChar() == '}') {
+                position_++;
+                std::cout << "Parsed Empty Object" << std::endl;
+                return;
+            }
+
             // Parse key-value pair within the object
             parseObjectMembers();
 
@@ -59,8 +68,6 @@ private:
                 position_++;
                 std::cout << "Parsed Object" << std::endl;
                 trimWhitespace();
-                // After parsing the object, make a recursive call to parse the next JSON value
-                parseValue();
             } else {
                 // Handle error for missing closing curly bracket
                 isValidJson_ = false;
@@ -89,7 +96,6 @@ private:
                 trimWhitespace();
 
                 // Parse Value
-                // Parsing string for the test case
                 parseValue();
                 trimWhitespace();
 
@@ -114,6 +120,49 @@ private:
             }
         }
     } // parseObjectMembers()
+
+    void parseArray() {
+        // Expecting "["
+        if (getCurrentChar() == '[') {
+            // Move the position forward to skip it
+            position_++;
+
+            trimWhitespace();
+            if (getCurrentChar() == ']') {
+                position_++;
+                std::cout << "Parsed Empty Array" << std::endl;
+                return;
+            }
+
+            while (position_ < input_.size() && getCurrentChar() != ']') {
+                trimWhitespace();
+                parseValue();
+
+                trimWhitespace();
+                if (getCurrentChar() == ',') {
+                    position_++;
+                } else if (getCurrentChar() != ']') {
+                    isValidJson_ = false;
+                    std::cerr << "Error: Expected ',' or ']' but found '" << extractUnexpected(1) << "'" << std::endl;
+                    return;
+                }
+            }
+
+            // Expecting "}"
+            if (getCurrentChar() == ']') {
+                position_++;
+                // Print or process the parsed array elements as needed
+                std::cout << "Parsed Array" << std::endl;
+            } else {
+                // Handle error for missing closing curly bracket
+                isValidJson_ = false;
+                std::cerr << "Error: Expected ']' but found '" << extractUnexpected(1) << "'" << std::endl;
+            }
+        } else {
+            isValidJson_ = false;
+            std::cerr << "Error: Expected '[' but found '" << extractUnexpected(1) << "'" << std::endl;
+        }
+    } // parseArray
 
     bool parseString() {
         if (getCurrentChar() == '\"') {
@@ -228,12 +277,13 @@ private:
     void parseNumber() {
         std::string parsedNumber;
 
-        while ((position_ + 1 < input_.size()) &&  (isNumChar(getCurrentChar()) || getCurrentChar() == '.')) {
+        while ((position_ < input_.size()) &&  (isNumChar(getCurrentChar()) || getCurrentChar() == '.')) {
             parsedNumber += getCurrentChar();
             position_++;
         }
 
-        if (position_ + 1 < input_.size() && !isIdentifierChar(input_[position_ + 1])) {
+        // if (position_ + 1 < input_.size() && !isIdentifierChar(input_[position_ + 1])) {
+        if (position_ < input_.size() && !isIdentifierChar(input_[position_])) {
             std::cout << "Parsed Number: " << parsedNumber << std::endl;
         } else {
             isValidJson_ = false;
